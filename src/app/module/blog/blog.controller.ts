@@ -46,6 +46,21 @@ const createPost = async (req: Request, res: Response, next: NextFunction) => {
   }
 };
 
+const editPost = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { id } = req.params;
+    const payload = req.body;
+    const result = await BlogPostServices.editPostIntoDB(id, payload);
+    res.status(201).json({
+      success: true,
+      message: "Post edited successfully",
+      data: result,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 const deletePost = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
@@ -65,4 +80,5 @@ export const BlogControllers = {
   createPost,
   deletePost,
   getSinglePost,
+  editPost
 };

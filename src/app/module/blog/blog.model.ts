@@ -30,5 +30,4 @@ const blogSchema = new Schema<TBlogPost>(
   },
 );
 
-
 export const BlogPost = model<TBlogPost>("Blog", blogSchema);

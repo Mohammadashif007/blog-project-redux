@@ -2,13 +2,12 @@ import { Request, Response } from "express";
 import { UserServices } from "./user.service";
 import httpStatus from "http-status-codes";
 import { catchAsync } from "../../utils/catchAsync";
-import { sendResponse } from "../../routes/sendResponse";
+import { sendResponse } from "../../utils/sendResponse";
 
 const createUser = catchAsync(async (req: Request, res: Response) => {
   const data = req.body;
-
   const result = await UserServices.createUserIntoDB(data);
-  console.log(result);
+
   sendResponse(res, {
     statusCode: httpStatus.CREATED,
     success: true,

@@ -9,7 +9,8 @@ export const globalErrorHandler = (
   next: NextFunction,
 ) => {
   res.status(500).json({
-    success: false,
+    success: true,
     message: "Something went wrong",
+    err,
   });
 };

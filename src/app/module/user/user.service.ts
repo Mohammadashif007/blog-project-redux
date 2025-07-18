@@ -8,7 +8,8 @@ const createUserIntoDB = async (payload: IUser) => {
 
 const getAllUsersFromDB = async () => {
   const users = await User.find({});
-  return users;
+  const totalUsers = await User.countDocuments();
+  return { data: users, meta: { total: totalUsers } };
 };
 
 export const UserServices = {

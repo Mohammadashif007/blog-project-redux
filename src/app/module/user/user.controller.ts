@@ -1,16 +1,15 @@
 import { Request, Response } from "express";
 import { UserServices } from "./user.service";
+import httpStatus from "http-status-codes";
 import { catchAsync } from "../../utils/catchAsync";
 import { sendResponse } from "../../routes/sendResponse";
 
 const createUser = catchAsync(async (req: Request, res: Response) => {
   const data = req.body;
-
   const result = await UserServices.createUserIntoDB(data);
-  sendResponse({
-    res,
+  sendResponse(res, {
+    statusCode: httpStatus.CREATED,
     success: true,
-    statusCode: 201,
     message: "User created successfully",
     data: result,
   });
@@ -18,12 +17,12 @@ const createUser = catchAsync(async (req: Request, res: Response) => {
 
 const getAllUsers = catchAsync(async (req: Request, res: Response) => {
   const users = await UserServices.getAllUsersFromDB();
-  sendResponse({
-    res,
+  sendResponse(res, {
+    statusCode: httpStatus.ACCEPTED,
     success: true,
-    statusCode: 200,
-    message: "All user retrieve successfully",
+    message: "All user retrieve Successfully",
     data: users,
+    meta: users.meta,
   });
 });
 

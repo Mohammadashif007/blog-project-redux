@@ -1,8 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { NextFunction, Request, Response } from "express";
-import config from "../config";
 import { AppError } from "../errorHelpers/AppError";
+import { success } from "zod";
+import config from "../config";
 
 export const globalErrorHandler = (
   err: any,
@@ -11,17 +12,19 @@ export const globalErrorHandler = (
   next: NextFunction,
 ) => {
   let statusCode = 500;
-  let message = "Something went wrong";
+  let message = "Something went wrongggg";
 
   if (err instanceof AppError) {
     statusCode = err.statusCode;
     message = err.message;
   } else if (err instanceof Error) {
-    res.status(statusCode).json({
-      success: false,
-      message,
-      err,
-      stack: config.node_env === "development" ? err.stack : "",
-    });
+    statusCode = 500;
+    message = err.message;
   }
+  res.status(statusCode).json({
+    success: false,
+    message: message,
+    err,
+    stack: config.node_env === "development" ? err.stack : null,
+  });
 };

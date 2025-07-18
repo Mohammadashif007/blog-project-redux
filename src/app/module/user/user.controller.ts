@@ -1,24 +1,33 @@
-import { NextFunction, Request, Response } from "express";
+import { Request, Response } from "express";
 import { UserServices } from "./user.service";
-import httpStatus from "http-status-codes";
-import { AppError } from "../../errorHelpers/AppError";
+import { catchAsync } from "../../utils/catchAsync";
+import { sendResponse } from "../../routes/sendResponse";
 
-const createUser = async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    throw new Error();
-    throw new AppError(httpStatus.BAD_GATEWAY, "Nothing is impossible");
-    const data = req.body;
-    const result = await UserServices.createUserIntoDB(data);
-    res.status(httpStatus.CREATED).json({
-      success: true,
-      message: "User created successfully",
-      data: result,
-    });
-  } catch (error) {
-    next(error);
-  }
-};
+const createUser = catchAsync(async (req: Request, res: Response) => {
+  const data = req.body;
+
+  const result = await UserServices.createUserIntoDB(data);
+  sendResponse({
+    res,
+    success: true,
+    statusCode: 201,
+    message: "User created successfully",
+    data: result,
+  });
+});
+
+const getAllUsers = catchAsync(async (req: Request, res: Response) => {
+  const users = await UserServices.getAllUsersFromDB();
+  sendResponse({
+    res,
+    success: true,
+    statusCode: 200,
+    message: "All user retrieve successfully",
+    data: users,
+  });
+});
 
 export const UserControllers = {
   createUser,
+  getAllUsers,
 };

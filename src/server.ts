@@ -1,7 +1,7 @@
 import app from "./app";
 import mongoose from "mongoose";
 import config from "./app/config";
-
+import { seedSuperAdmin } from "./app/utils/seedSuperAdmin";
 
 async function main() {
   try {
@@ -14,4 +14,7 @@ async function main() {
   }
 }
 
-main();
+(async () => {
+  await main();
+  await seedSuperAdmin();
+})();

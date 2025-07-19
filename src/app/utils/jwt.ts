@@ -1,14 +1,16 @@
-import jwt, { JwtPayload } from "jsonwebtoken";
-import config from "../config";
+import jwt, { JwtPayload, SignOptions } from "jsonwebtoken";
 
-export const generateToken = (payload: JwtPayload) => {
-  const accessToken = jwt.sign(payload, config.jwt_secret as string, {
-    expiresIn: "1d",
-  });
+
+export const generateToken = (
+  payload: JwtPayload,
+  secret: string,
+  expiresIn: string,
+) => {
+  const accessToken = jwt.sign(payload, secret, { expiresIn } as SignOptions);
   return accessToken;
 };
 
-export const verifyToken = (accessToken: string) => {
-  const verifiedToken = jwt.verify(accessToken, config.jwt_secret as string);
-  return verifiedToken;
+export const verifiedToken = (accessToken: string, secret: string) => {
+  const verifyToken = jwt.verify(accessToken, secret);
+  return verifyToken;
 };

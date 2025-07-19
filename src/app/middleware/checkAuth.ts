@@ -1,8 +1,10 @@
 import { NextFunction, Request, Response } from "express";
 import { AppError } from "../errorHelpers/AppError";
 import httpStatus from "http-status-codes";
-import { verifyToken } from "../utils/jwt";
 import { JwtPayload } from "jsonwebtoken";
+
+import config from "../config";
+import { verifiedToken } from "../utils/jwt";
 
 export const checkAuth =
   (...authRole: string[]) =>
@@ -12,7 +14,11 @@ export const checkAuth =
       if (!accessToken) {
         throw new AppError(httpStatus.BAD_REQUEST, "Token does not exist");
       }
-      const verifiedToke = verifyToken(accessToken) as JwtPayload;
+      const verifiedToke = verifiedToken(
+        accessToken,
+        config.jwt_access_secret as string,
+      ) as JwtPayload;
+
       if (!verifiedToke) {
         throw new AppError(httpStatus.BAD_REQUEST, "Invalid token");
       }

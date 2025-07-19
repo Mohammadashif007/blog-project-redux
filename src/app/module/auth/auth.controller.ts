@@ -15,6 +15,18 @@ const loginUser = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const createNewAccessToken = catchAsync(async (req: Request, res: Response) => {
+  const refreshToken = req.headers.authorization;
+  const user = await AuthServices.getNewAccessToken(refreshToken as string);
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.ACCEPTED,
+    message: "User login successfully",
+    data: user,
+  });
+});
+
 export const AuthControllers = {
   loginUser,
+  createNewAccessToken
 };

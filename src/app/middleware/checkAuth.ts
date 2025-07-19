@@ -12,13 +12,14 @@ export const checkAuth =
       if (!accessToken) {
         throw new AppError(httpStatus.BAD_REQUEST, "Token does not exist");
       }
-      const verifyToke = verifyToken(accessToken) as JwtPayload;
-      if (!verifyToke) {
+      const verifiedToke = verifyToken(accessToken) as JwtPayload;
+      if (!verifiedToke) {
         throw new AppError(httpStatus.BAD_REQUEST, "Invalid token");
       }
-      if (!authRole.includes(verifyToke.role)) {
+      if (!authRole.includes(verifiedToke.role)) {
         throw new AppError(httpStatus.BAD_REQUEST, "You are not authorized");
       }
+      req.user = verifiedToke;
       next();
     } catch (error) {
       next(error);

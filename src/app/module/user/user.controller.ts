@@ -3,7 +3,6 @@ import { UserServices } from "./user.service";
 import httpStatus from "http-status-codes";
 import { catchAsync } from "../../utils/catchAsync";
 import { sendResponse } from "../../utils/sendResponse";
-import { verifyToken } from "../../utils/jwt";
 import { JwtPayload } from "jsonwebtoken";
 
 const createUser = catchAsync(async (req: Request, res: Response) => {
@@ -21,16 +20,7 @@ const createUser = catchAsync(async (req: Request, res: Response) => {
 const updateUser = catchAsync(async (req: Request, res: Response) => {
   const {userId} = req.params;
   const payload = req.body;
-  const accessToken = req.headers.authorization;
-  if (!accessToken) {
-    return sendResponse(res, {
-      statusCode: httpStatus.UNAUTHORIZED,
-      success: false,
-      message: "Authorization token is missing",
-      data: null,
-    });
-  }
-  const verifiedToken = verifyToken(accessToken);
+  const verifiedToken = req.user;
   const result = await UserServices.updateUserIntoDB(
     userId,
     payload,

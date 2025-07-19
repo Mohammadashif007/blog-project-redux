@@ -4,6 +4,9 @@ import { UserControllers } from "./user.controller";
 import { validateRequest } from "../../middleware/validateRequest";
 import { createUserZodSchema } from "./user.validation";
 
+import { checkAuth } from "../../middleware/checkAuth";
+import { Role } from "./user.interface";
+
 const app = express.Router();
 
 app.post(
@@ -11,6 +14,10 @@ app.post(
   validateRequest(createUserZodSchema),
   UserControllers.createUser,
 );
-app.get("/", UserControllers.getAllUsers);
+app.get(
+  "/all-users",
+  checkAuth(Role.ADMIN, Role.SUPER_ADMIN),
+  UserControllers.getAllUsers,
+);
 
 export const UserRoutes = app;

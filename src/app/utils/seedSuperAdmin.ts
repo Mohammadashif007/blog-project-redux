@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import config from "../config";
 
 import { User } from "../module/user/user.model";
@@ -37,6 +38,6 @@ export const seedSuperAdmin = async () => {
     console.log("Super Admin Created Successfully \n");
     console.log(superAdmin);
   } catch (error) {
-    console.log(error);
+    // console.log(error);
   }
 };

@@ -18,7 +18,6 @@ export const checkAuth =
         accessToken,
         config.jwt_access_secret as string,
       ) as JwtPayload;
-
       if (!verifiedToke) {
         throw new AppError(httpStatus.BAD_REQUEST, "Invalid token");
       }

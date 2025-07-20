@@ -6,7 +6,10 @@ import bcrypt from "bcrypt";
 import { IsActive, IUser } from "../user/user.interface";
 import { generateToken, verifiedToken } from "../../utils/jwt";
 import config from "../../config";
-import { createUserTokens } from "../../utils/userTokens";
+import {
+  createNewAccessTokenWithRefreshToken,
+  createUserTokens,
+} from "../../utils/userTokens";
 import { JwtPayload } from "jsonwebtoken";
 import jwt from "jsonwebtoken";
 
@@ -24,7 +27,13 @@ const loginUser = async (payload: Partial<IUser>) => {
     throw new AppError(httpStatus.BAD_REQUEST, "Incorrect password");
   }
 
-  const userTokens = createUserTokens(payload);
+  const jwtPayload = {
+    role: isUserExist.role,
+    email: isUserExist.email,
+    userId: isUserExist._id,
+  };
+
+  const userTokens = createUserTokens(jwtPayload);
 
   const { password: pass, ...rest } = isUserExist.toObject();
 
@@ -36,44 +45,14 @@ const loginUser = async (payload: Partial<IUser>) => {
 };
 
 const getNewAccessToken = async (refreshToken: string) => {
-  const verifiedRefreshToken = verifiedToken(
-    refreshToken,
-    config.jwt_refresh_secret as string,
-  ) as JwtPayload;
-
-  const isUserExist = await User.findOne({ email: verifiedRefreshToken.email });
-  if (!isUserExist) {
-    throw new AppError(httpStatus.BAD_REQUEST, "User not found");
-  }
-  if (
-    isUserExist.isActive === IsActive.BLOCK ||
-    isUserExist.isActive === IsActive.INACTIVE
-  ) {
-    throw new AppError(
-      httpStatus.BAD_REQUEST,
-      `User is ${isUserExist.isActive}`,
-    );
-  }
-  if (isUserExist.isDeleted) {
-    throw new AppError(httpStatus.BAD_REQUEST, "User is delete");
-  }
-
-  const payload = {
-    userId: isUserExist._id,
-    email: isUserExist.email,
-    role: isUserExist.role,
-  };
-
-  const accessToken = generateToken(
-    payload,
-    config.jwt_access_secret as string,
-    config.jwt_access_expired as string,
-  );
+  const newAccessToken =
+    await createNewAccessTokenWithRefreshToken(refreshToken);
 
   return {
-    accessToken,
+    accessToken: newAccessToken,
   };
 };
+
 export const AuthServices = {
   loginUser,
   getNewAccessToken,

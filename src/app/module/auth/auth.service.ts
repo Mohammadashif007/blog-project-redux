@@ -30,7 +30,7 @@ const loginUser = async (payload: Partial<IUser>) => {
   const jwtPayload = {
     role: isUserExist.role,
     email: isUserExist.email,
-    userId: isUserExist._id,
+    _id: isUserExist._id,
   };
 
   const userTokens = createUserTokens(jwtPayload);
@@ -53,7 +53,35 @@ const getNewAccessToken = async (refreshToken: string) => {
   };
 };
 
+const resetPassword = async (
+  oldPassword: string,
+  password: string,
+  decodedToken: JwtPayload,
+) => {
+  const user = await User.findById(decodedToken.userId);
+  console.log(user);
+ 
+
+  const oldPasswordMatch = await bcrypt.compare(
+    user!.password as string,
+    Number(config.bcrypt_salt_round),
+  );
+ 
+
+  if (!oldPasswordMatch) {
+    throw new AppError(httpStatus.BAD_GATEWAY, "Old password dose not match");
+  }
+
+  user!.password = await bcrypt.hash(
+    password,
+    Number(config.bcrypt_salt_round),
+  );
+  user!.save();
+  return true;
+};
+
 export const AuthServices = {
   loginUser,
   getNewAccessToken,
+  resetPassword,
 };

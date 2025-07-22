@@ -1,4 +1,4 @@
-import {  Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
 import { catchAsync } from "../../utils/catchAsync";
 import { AuthServices } from "./auth.service";
 import { sendResponse } from "../../utils/sendResponse";
@@ -8,23 +8,49 @@ import { JwtPayload } from "jsonwebtoken";
 import { createUserTokens } from "../../utils/userTokens";
 import { AppError } from "../../errorHelpers/AppError";
 import config from "../../config";
+import passport from "passport";
 
+// const loginUser = catchAsync(async (req: Request, res: Response) => {
+//   const loginInfo = await AuthServices.loginUser(req.body);
+//   console.log(loginInfo);
+//   setAuthCookie(res, loginInfo);
 
-const loginUser = catchAsync(async (req: Request, res: Response) => {
-  const loginInfo = await AuthServices.loginUser(req.body);
-  console.log(loginInfo);
-  setAuthCookie(res, loginInfo);
+//   sendResponse(res, {
+//     success: true,
+//     statusCode: httpStatus.ACCEPTED,
+//     message: "User login successfully",
+//     data: loginInfo,
+//   });
+// });
 
+const loginUser = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    passport.authenticate("local", async (err: any, user: any, info: any) => {
+      if (err) {
+        return next(new AppError(401, "error occur"));
+      }
+      if (!user) {
+        return next(new AppError(401, info.message));
+      }
 
-  sendResponse(res, {
-    success: true,
-    statusCode: httpStatus.ACCEPTED,
-    message: "User login successfully",
-    data: loginInfo,
-  });
-});
+      const userTokens = await createUserTokens(user);
+      setAuthCookie(res, userTokens);
 
+      const { password, ...rest } = user.toObject();
 
+      sendResponse(res, {
+        success: true,
+        message: "Login successful",
+        statusCode: httpStatus.OK,
+        data: {
+          accessToken: userTokens.accessToken,
+          refreshToken: userTokens.refreshToken,
+          data: rest,
+        },
+      });
+    })(req, res, next);
+  },
+);
 
 const createNewAccessToken = catchAsync(async (req: Request, res: Response) => {
   const refreshToken = req.cookies.refreshToken;
@@ -88,9 +114,9 @@ const resetPassword = catchAsync(async (req: Request, res: Response) => {
 
 const googleCallBackController = catchAsync(
   async (req: Request, res: Response) => {
-    let redirectTo = req.query.state? req.query.state as string :  "" ;
-    if(redirectTo.startsWith("/")){
-      redirectTo = redirectTo.slice(1)
+    let redirectTo = req.query.state ? (req.query.state as string) : "";
+    if (redirectTo.startsWith("/")) {
+      redirectTo = redirectTo.slice(1);
     }
     const user = req.user;
     console.log("user", user);

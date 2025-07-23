@@ -3,15 +3,11 @@ import { IsActive, Role } from "./user.interface";
 
 export const createUserZodSchema = z.object({
   name: z
-    .string()
-    .min(1, { message: "Name is required" })
+    .string({error: "name is required"})
     .min(2, { message: "Name must be at least 2 characters long" })
     .max(50, { message: "Name must be less than 50 characters" }),
 
-  email: z
-    .string()
-    .nonempty({ message: "Email is required" })
-    .email({ message: "Invalid email address" }),
+  email: z.string({ error: "email is required" }).email(),
 
   password: z
     .string()

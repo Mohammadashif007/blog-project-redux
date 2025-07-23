@@ -29,9 +29,10 @@ passport.use(
         const isGoogleAuthenticated = user.auths.some(
           (e) => e.provider == "google",
         );
-        if (isGoogleAuthenticated) {
+        if (isGoogleAuthenticated && !user.password) {
           return done(null, false, {
-            message: "User authenticate through google. If you want to login with credentials please set a password at first.",
+            message:
+              "User authenticate through google. If you want to login with credentials please set a password at first.",
           });
         }
 

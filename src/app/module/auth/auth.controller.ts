@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextFunction, Request, Response } from "express";
 import { catchAsync } from "../../utils/catchAsync";
 import { AuthServices } from "./auth.service";
@@ -36,6 +37,7 @@ const loginUser = catchAsync(
       const userTokens = await createUserTokens(user);
       setAuthCookie(res, userTokens);
 
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { password, ...rest } = user.toObject();
 
       sendResponse(res, {

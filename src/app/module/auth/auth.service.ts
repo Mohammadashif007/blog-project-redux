@@ -13,36 +13,36 @@ import {
 import { JwtPayload } from "jsonwebtoken";
 import jwt from "jsonwebtoken";
 
-const loginUser = async (payload: Partial<IUser>) => {
-  const { email } = payload;
-  const isUserExist = await User.findOne({ email });
-  if (!isUserExist) {
-    throw new AppError(httpStatus.BAD_REQUEST, "Email dose not match");
-  }
-  const isPasswordMatch = await bcrypt.compare(
-    payload.password as string,
-    isUserExist.password as string,
-  );
-  if (!isPasswordMatch) {
-    throw new AppError(httpStatus.BAD_REQUEST, "Incorrect password");
-  }
+// const loginUser = async (payload: Partial<IUser>) => {
+//   const { email } = payload;
+//   const isUserExist = await User.findOne({ email });
+//   if (!isUserExist) {
+//     throw new AppError(httpStatus.BAD_REQUEST, "Email dose not match");
+//   }
+//   const isPasswordMatch = await bcrypt.compare(
+//     payload.password as string,
+//     isUserExist.password as string,
+//   );
+//   if (!isPasswordMatch) {
+//     throw new AppError(httpStatus.BAD_REQUEST, "Incorrect password");
+//   }
 
-  const jwtPayload = {
-    role: isUserExist.role,
-    email: isUserExist.email,
-    _id: isUserExist._id,
-  };
+//   const jwtPayload = {
+//     role: isUserExist.role,
+//     email: isUserExist.email,
+//     _id: isUserExist._id,
+//   };
 
-  const userTokens = createUserTokens(jwtPayload);
+//   const userTokens = createUserTokens(jwtPayload);
 
-  const { password: pass, ...rest } = isUserExist.toObject();
+//   const { password: pass, ...rest } = isUserExist.toObject();
 
-  return {
-    accessToken: userTokens.accessToken,
-    refreshToken: userTokens.refreshToken,
-    user: rest,
-  };
-};
+//   return {
+//     accessToken: userTokens.accessToken,
+//     refreshToken: userTokens.refreshToken,
+//     user: rest,
+//   };
+// };
 
 const getNewAccessToken = async (refreshToken: string) => {
   const newAccessToken =
@@ -81,7 +81,7 @@ const resetPassword = async (
 };
 
 export const AuthServices = {
-  loginUser,
+  // loginUser,
   getNewAccessToken,
   resetPassword,
 };

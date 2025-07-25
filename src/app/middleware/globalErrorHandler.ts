@@ -1,10 +1,14 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unused-vars */
+
 import { NextFunction, Request, Response } from "express";
 import { AppError } from "../errorHelpers/AppError";
-import { success, ZodError } from "zod";
 import config from "../config";
-import { issue } from "zod/v4/core/util.cjs";
+import { handleZodError } from "../helpers/handleZodError";
+import { handleValidationError } from "../helpers/handleValidationError";
+import { handleCastError } from "../helpers/handleCastError";
+import { handleDuplicateError } from "../helpers/handleDuplicateError";
+import { TErrorSources } from "../interfaces/error.types";
 
 export const globalErrorHandler = (
   err: any,
@@ -12,45 +16,46 @@ export const globalErrorHandler = (
   res: Response,
   next: NextFunction,
 ) => {
+  if (config.node_env === "development") {
+    console.log(err);
+  }
+
   let statusCode = 500;
   let message = "Something went wrongggg";
-  const errorSources: any = [];
+  let errorSources: TErrorSources[] = [];
 
   // ! duplicate error
   if (err.code === 11000) {
-    statusCode = 400;
-    const matchedArray = err.message.match(/"([^"]*)"/);
-    message = `${matchedArray[1]} already exist`;
+    const simplifiedError = handleDuplicateError(err);
+    statusCode = simplifiedError.statusCode;
+    message = simplifiedError.message;
   }
 
   // !Object id error
   else if (err.name === "CastError") {
-    statusCode = 401;
-    message = "Invalid mongodb object id. Please provide a valid ID";
+    const simplifiedError = handleCastError(err);
+    statusCode = simplifiedError.statusCode;
+    message = simplifiedError.message;
   }
 
   // ! mongoose validation Error
   else if (err.name === "ValidationError") {
-    statusCode = 401;
-    const errors = Object.values(err.errors);
-    message = "Validation error";
-    errors.forEach((errorObject: any) =>
-      errorSources.push({
-        path: errorObject.path,
-        message: errorObject.message,
-      }),
-    );
+    const simplifiedError = handleValidationError(err);
+    statusCode = simplifiedError.statusCode;
+    message = simplifiedError.message;
+    errorSources = simplifiedError.errorSources as TErrorSources[];
   }
 
   //! Zod error
   else if (err.name === "ZodError") {
-    statusCode = 400;
-    message = "Zod error occurred";
-    err = err.issues;
-    err.forEach((issue: any) =>
-      errorSources.push({ path: issue.path[0], message: issue.message }),
-    );
-  } else if (err instanceof AppError) {
+    const simplifiedError = handleZodError(err);
+    errorSources = simplifiedError.errorSources as TErrorSources[];
+    statusCode = simplifiedError.statusCode;
+    message = simplifiedError.message;
+  }
+
+  // ! Custom AppError
+  else if (err instanceof AppError) {
     statusCode = err.statusCode;
     message = err.message;
   } else if (err instanceof Error) {
@@ -61,8 +66,7 @@ export const globalErrorHandler = (
     success: false,
     message: message,
     errorSources,
-    // err,
-
+    err: config.node_env === "development" ? err : null,
     stack: config.node_env === "development" ? err.stack : null,
   });
 };

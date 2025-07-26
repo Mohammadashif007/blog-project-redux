@@ -16,9 +16,9 @@ export const globalErrorHandler = (
   res: Response,
   next: NextFunction,
 ) => {
-  if (config.node_env === "development") {
-    console.log(err);
-  }
+  // if (config.node_env === "development") {
+  //   console.log(err);
+  // }
 
   let statusCode = 500;
   let message = "Something went wrongggg";

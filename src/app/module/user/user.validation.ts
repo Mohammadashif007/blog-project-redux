@@ -2,13 +2,7 @@ import z from "zod";
 import { IsActive, Role } from "./user.interface";
 
 export const createUserZodSchema = z.object({
-  name: z.object({
-    nick: z.string({ error: "nick Name is required" }),
-    fullName: z.object({
-      firstName: z.string({error: "First name is required"}),
-      lastName: z.string({error: "last name is required"}),
-    }),
-  }),
+  name: z.string({ error: "Name is required" }),
 
   email: z.string({ error: "email is required" }).email(),
 

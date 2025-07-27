@@ -6,9 +6,9 @@ export interface ITourType {
 
 export interface ITour {
   title: string;
-  slug: string;
+  slug?: string;
   description?: string;
-  image?: string[];
+  image?: string;
   location?: string;
   castFrom?: number;
   startDate?: Date;

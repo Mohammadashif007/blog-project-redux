@@ -9,20 +9,20 @@ const createDivisionIntoDB = async (payload: IDivision) => {
     throw new AppError(httpStatus.BAD_REQUEST, "Division already exist");
   }
 
-  const baseSlug = payload.name.toLocaleLowerCase().split(" ").join("-");
-  const slug = `${baseSlug}-division`;
-  payload.slug = slug;
   const result = await Division.create(payload);
   return result;
 };
+
 const getDivisionFromDB = async () => {
   const result = await Division.find();
   return result;
 };
+
 const getSingleDivisionFromDB = async (id: string) => {
   const result = await Division.findById(id);
   return result;
 };
+
 const updateDivisionIntoDB = async (
   id: string,
   payload: Partial<IDivision>,
@@ -45,12 +45,14 @@ const updateDivisionIntoDB = async (
     );
   }
 
+
   const result = await Division.findByIdAndUpdate(id, payload, {
     new: true,
     runValidators: true,
   });
   return result;
 };
+
 const deleteDivisionFromDB = async (id: string) => {
   await Division.findByIdAndDelete(id);
   return null;

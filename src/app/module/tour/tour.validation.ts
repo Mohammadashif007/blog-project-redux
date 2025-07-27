@@ -3,6 +3,7 @@ import z from "zod";
 export const createTourZodSchema = z.object({
   title: z.string(),
   description: z.string().optional(),
+  slug: z.string().optional(),
   image: z.string().optional(),
   location: z.string().optional(),
   costForm: z.number().optional(),
@@ -24,6 +25,7 @@ export const updateTourZodSchema = z.object({
   title: z.string().optional(),
   description: z.string().optional(),
   image: z.string().optional(),
+  slug: z.string().optional(),
   location: z.string().optional(),
   costForm: z.number().optional(),
   startDate: z.string().optional(),
@@ -42,4 +44,7 @@ export const updateTourZodSchema = z.object({
 
 export const createTourTypeZodSchema = z.object({
   name: z.string(),
+});
+export const updateTourTypeZodSchema = z.object({
+  name: z.string().optional(),
 });

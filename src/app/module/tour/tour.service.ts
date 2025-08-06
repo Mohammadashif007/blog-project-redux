@@ -1,4 +1,6 @@
+import { excludeField } from "../../constant";
 import { AppError } from "../../errorHelpers/AppError";
+import { tourSearchableFields } from "./tour.constant";
 import { ITour, ITourType } from "./tour.interface";
 import { Tour, TourType } from "./tour.model";
 import httpStatus from "http-status-codes";
@@ -44,8 +46,50 @@ const deleteTour = async (id: string) => {
 
 const getAllTourFromDB = async (query: Record<string, string>) => {
   const filter = query;
-  const tours = await Tour.find(filter);
-  return tours;
+  const searchTerm = query.searchTerm || "";
+  const sort = query.sort || "-createdAt";
+  const fields = query.fields?.split(",").join(" ") || "";
+  const page = Number(query.page) || 1;
+  const limit = Number(query.limit) || 10;
+  const skip = (page - 1) * limit;
+
+  for (const field of excludeField) {
+    delete filter[field];
+  }
+
+  const searchQuery = {
+    $or: tourSearchableFields.map((field) => ({
+      [field]: { $regex: searchTerm, $options: "i" },
+    })),
+  };
+  // const tours = await Tour.find(searchQuery)
+  //   .find(filter)
+  //   .sort(sort)
+  //   .select(fields)
+  //   .skip(skip)
+  //   .limit(limit);
+
+  const filterQuery = Tour.find(filter);
+  const tours = filterQuery.find(searchQuery);
+  const allTours = await tours
+    .sort(sort)
+    .select(fields)
+    .skip(skip)
+    .limit(limit);
+
+  const totalTours = await Tour.countDocuments();
+  const totalPage = Math.ceil(totalTours / limit);
+
+  const meta = {
+    page: page,
+    limit: limit,
+    total: totalTours,
+    totalPage: totalPage,
+  };
+  return {
+    meta,
+    data: allTours,
+  };
 };
 
 // !------------ Tour Types services -------------//

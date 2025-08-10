@@ -2,15 +2,25 @@ import { Request, Response } from "express";
 import { catchAsync } from "../../utils/catchAsync";
 import { DivisionServices } from "./division.service";
 import { sendResponse } from "../../utils/sendResponse";
+import { IDivision } from "./division.interface";
 
 const createDivision = catchAsync(async (req: Request, res: Response) => {
-  const divisionData = req.body;
-  const result = await DivisionServices.createDivisionIntoDB(divisionData);
+  console.log("file", req.file);
+  console.log("form data", req.body);
+
+  const payload: IDivision = {
+    ...req.body,
+    thumbnail: req.file?.path
+  }
+
+  // const divisionData = req.body;
+
+  const result = await DivisionServices.createDivisionIntoDB(payload);
   sendResponse(res, {
     statusCode: 201,
     success: true,
     message: "Division created successfully",
-    data: result,
+    data: result
   });
 });
 

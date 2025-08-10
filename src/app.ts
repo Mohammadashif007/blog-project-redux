@@ -13,7 +13,6 @@ const app = express();
 
 app.use(
   expressSession({
-
     secret: config.express_session_secret as string,
     resave: false,
     saveUninitialized: false,
@@ -24,6 +23,7 @@ app.use(passport.session());
 app.use(cookieParser());
 app.use(cors());
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 app.get("/", (req: Request, res: Response) => {
   res.send("Hello World!");

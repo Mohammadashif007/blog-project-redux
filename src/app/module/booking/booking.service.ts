@@ -1,74 +1,102 @@
-// import { AppError } from "../../errorHelpers/AppError";
-// import { User } from "../user/user.model";
-// import { BOOKING_STATUS, IBooking } from "./booking.interface";
-// import httpStatus from "http-status-codes";
-// import { Booking } from "./booking.model";
-// import { Payment } from "../payment/payment.model";
-// import { PAYMENT_STATUS } from "../payment/payment.interface";
-// import { Tour } from "../tour/tour.model";
-
 import { AppError } from "../../errorHelpers/AppError";
+import { PAYMENT_STATUS } from "../payment/payment.interface";
+import { Payment } from "../payment/payment.model";
+import { Tour } from "../tour/tour.model";
 import { User } from "../user/user.model";
-import { IBooking } from "./booking.interface";
+import { BOOKING_STATUS, IBooking } from "./booking.interface";
 import { Booking } from "./booking.model";
 import httpStatus from "http-status-codes";
 
-// const getTransactionId = () => {
-//   return `Tnx_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
-// };
+const getTransactionId = () => {
+  return `Tnx_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
+};
 
-// const createBooking = async (payload: Partial<IBooking>, userId: string) => {
-//   const transactionId = getTransactionId();
+const createBooking = async (payload: Partial<IBooking>, userId: string) => {
+  const transactionId = getTransactionId();
 
-//   const user = await User.findById(userId);
-//   if (!user?.phone || !user?.address) {
-//     throw new AppError(httpStatus.BAD_GATEWAY, "Please update your profile");
-//   }
+  const session = await Booking.startSession();
+  session.startTransaction();
 
-//   const booking = await Booking.create({
-//     userId: user._id,
-//     status: BOOKING_STATUS.PENDING,
-//     ...payload,
-//   });
+  try {
+    const user = await User.findById(userId);
+    if (!user?.phone || !user?.address) {
+      throw new AppError(
+        httpStatus.BAD_REQUEST,
+        "Update your profile before booking a tour",
+      );
+    }
 
-//     const tour = await Tour.findById(payload.tour).select("castFrom");
-//     if(!tour?.castFrom){
-//         throw new AppError(httpStatus.BAD_REQUEST, "No tour cast found")
-//     }
+    const booking = await Booking.create(
+     [ {
+        user: userId,
+        status: BOOKING_STATUS.PENDING,
+        ...payload,
+      }],
+      { session },
+    );
 
-//   const amount = Number(tour) * Number(payload.guestCount);
+    const tour = await Tour.findById(payload.tour).select("castFrom");
 
-//   const payment = await Payment.create({
-//     booking: booking._id,
-//     transactionId: transactionId,
-//     status: PAYMENT_STATUS.UNPAID,
-//     amount: amount,
-//   });
+    if (!tour?.castFrom) {
+      throw new AppError(httpStatus.BAD_REQUEST, "No tour cast found");
+    }
 
-//   const updateBooking = await Booking.findByIdAndUpdate(
-//     booking._id,
-//     {
-//       payment: payment._id,
-//     },
-//     { new: true, runValidators: true },
-//   );
+    const amount = Number(booking[0]?.guestCount) * Number(tour.castFrom!);
 
-//   return updateBooking;
-// };
+    const payment = await Payment.create(
+      [{
+        booking: booking[0]._id,
+        transactionId,
+        status: PAYMENT_STATUS.UNPAID,
+        amount: amount,
+      }],
+      { session },
+    );
 
-// export const BookingServices = {
-//   createBooking,
-// };
+    const updateBooking = await Booking.findByIdAndUpdate(
+      booking[0]._id,
+      { payment: payment[0]._id },
+      { new: true, runValidators: true, session },
+    )
+      .populate("user", "name email phone address")
+      .populate("tour", "title castFrom")
+      .populate("payment");
 
-const createBooking = async (payload: IBooking, userId: string) => {
-  const user = await User.findById(userId);
-  if(!user){
-    throw new AppError(httpStatus.NOT_FOUND, "User not found")
+    await session.commitTransaction();
+    session.endSession();
+
+    return updateBooking;
+  } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
+    throw error;
   }
-  const booking = await Booking.create(payload);
-  return booking;
+};
+
+const getAllBookings = async () => {
+  const bookings = await Booking.find({});
+  return bookings;
+};
+
+const getMyBookings = async () => {
+  const bookings = await Booking.findById({});
+  return bookings;
+};
+
+const getSingleBooking = async () => {
+  const bookings = await Booking.findById({});
+  return bookings;
+};
+
+const updateBooking = async () => {
+  const bookings = await Booking.findByIdAndUpdate({});
+  return bookings;
 };
 
 export const BookingServices = {
   createBooking,
+  getAllBookings,
+  getMyBookings,
+  getSingleBooking,
+  updateBooking,
 };

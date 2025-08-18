@@ -1,124 +1,74 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+// import { AppError } from "../../errorHelpers/AppError";
+// import { User } from "../user/user.model";
+// import { BOOKING_STATUS, IBooking } from "./booking.interface";
+// import httpStatus from "http-status-codes";
+// import { Booking } from "./booking.model";
+// import { Payment } from "../payment/payment.model";
+// import { PAYMENT_STATUS } from "../payment/payment.interface";
+// import { Tour } from "../tour/tour.model";
+
 import { AppError } from "../../errorHelpers/AppError";
 import { User } from "../user/user.model";
-import { BOOKING_STATUS, IBooking } from "./booking.interface";
-import httpStatus from "http-status-codes";
+import { IBooking } from "./booking.interface";
 import { Booking } from "./booking.model";
-import { Payment } from "../payment/payment.model";
-import { PAYMENT_STATUS } from "../payment/payment.interface";
-import { Tour } from "../tour/tour.model";
-import { sslService } from "../sslCommerz/sslCommerz.service";
-import { ISSLCommerz } from "../sslCommerz/sslCommerz.interface";
+import httpStatus from "http-status-codes";
 
-const getTransactionId = () => {
-  return `TnX_${Date.now()}-${Math.ceil(Math.random() * 1000)}`;
-};
+// const getTransactionId = () => {
+//   return `Tnx_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
+// };
 
-const createBooking = async (payload: Partial<IBooking>, userId: string) => {
-  const transactionId = getTransactionId();
+// const createBooking = async (payload: Partial<IBooking>, userId: string) => {
+//   const transactionId = getTransactionId();
 
-  const session = await Booking.startSession();
-  session.startTransaction();
+//   const user = await User.findById(userId);
+//   if (!user?.phone || !user?.address) {
+//     throw new AppError(httpStatus.BAD_GATEWAY, "Please update your profile");
+//   }
 
-  try {
-    const user = await User.findById(userId);
-    if (!user?.phone || !user.address) {
-      throw new AppError(
-        httpStatus.BAD_REQUEST,
-        "Please update your profile before book a tour",
-      );
-    }
+//   const booking = await Booking.create({
+//     userId: user._id,
+//     status: BOOKING_STATUS.PENDING,
+//     ...payload,
+//   });
 
-    const tour = await Tour.findById(payload?.tour).select("castFrom");
-    if (!tour?.castFrom) {
-      throw new AppError(httpStatus.NOT_FOUND, "tour cast not found");
-    }
+//     const tour = await Tour.findById(payload.tour).select("castFrom");
+//     if(!tour?.castFrom){
+//         throw new AppError(httpStatus.BAD_REQUEST, "No tour cast found")
+//     }
 
-    const totalAmount = Number(tour?.castFrom) * Number(payload.guestCount);
+//   const amount = Number(tour) * Number(payload.guestCount);
 
-    // !booking creation
-    const booking = await Booking.create(
-      [
-        {
-          user: userId,
-          status: BOOKING_STATUS.PENDING,
-          ...payload,
-        },
-      ],
-      { session },
-    );
+//   const payment = await Payment.create({
+//     booking: booking._id,
+//     transactionId: transactionId,
+//     status: PAYMENT_STATUS.UNPAID,
+//     amount: amount,
+//   });
 
-    // ! payment creation
-    const payment = await Payment.create(
-      [
-        {
-          booking: booking[0]._id,
-          transactionId: transactionId,
-          status: PAYMENT_STATUS.UNPAID,
-          amount: totalAmount,
-        },
-      ],
-      { session },
-    );
+//   const updateBooking = await Booking.findByIdAndUpdate(
+//     booking._id,
+//     {
+//       payment: payment._id,
+//     },
+//     { new: true, runValidators: true },
+//   );
 
-    const updatedBooking = await Booking.findByIdAndUpdate(
-      booking[0]._id,
-      {
-        payment: payment[0]._id,
-      },
-      { new: true, runValidators: true, session },
-    )
-      .populate("user", "name email phone address")
-      .populate("tour", "title castFrom")
-      .populate("payment");
+//   return updateBooking;
+// };
 
-    const userAddress = (updatedBooking?.user as any).address;
-    const userEmail = (updatedBooking?.user as any).email;
-    const userPhone = (updatedBooking?.user as any).phone;
-    const userName = (updatedBooking?.user as any).name;
+// export const BookingServices = {
+//   createBooking,
+// };
 
-    const sslPayload: ISSLCommerz = {
-      address: userAddress,
-      email: userEmail,
-      phoneNumber: userPhone,
-      name: userName,
-      amount: totalAmount,
-      transactionId: transactionId,
-    };
-
-    const sslPayment = await sslService.sslPaymentInit(sslPayload);
-
-
-    await session.commitTransaction();
-    session.endSession();
-    return { booking: updatedBooking, paymentUrl: sslPayment.GatewayPageURL };
-  } catch (error) {
-    await session.abortTransaction();
-    session.endSession();
-    throw error;
+const createBooking = async (payload: IBooking, userId: string) => {
+  const user = await User.findById(userId);
+  if(!user){
+    throw new AppError(httpStatus.NOT_FOUND, "User not found")
   }
-};
-
-const getAllBookings = async () => {
-  return {};
-};
-
-const getBookingById = async () => {
-  return {};
-};
-
-const updateBookingStatus = async () => {
-  return {};
-};
-
-const getUserBookings = async () => {
-  return {};
+  const booking = await Booking.create(payload);
+  return booking;
 };
 
 export const BookingServices = {
   createBooking,
-  getAllBookings,
-  getBookingById,
-  updateBookingStatus,
-  getUserBookings,
 };
